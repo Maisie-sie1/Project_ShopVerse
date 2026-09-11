@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛍️ ShopVerse — เว็บไซต์ขายของ (E-commerce)
 
-## Getting Started
+เว็บไซต์ร้านค้าออนไลน์ครบวงจร สร้างด้วย **Next.js 16 (App Router) Fullstack REST API + PostgreSQL**
 
-First, run the development server:
+## ✨ ฟีเจอร์หลัก
+
+- **ร้านค้า** — หน้าแรก, หน้ารวมสินค้า `(/shop)` พร้อมค้นหา / กรองหมวดหมู่ / กรองราคา / เปลี่ยนหน้า, หน้าสินค้า `(/product/[slug])`
+- **ตะกร้าสินค้า** — เพิ่ม/ลด/ลบสินค้า แสดงจำนวนบน header แบบเรียลไทม์
+- **ชำระเงิน (Checkout)** — ระบุที่อยู่จัดส่ง, เลือกวิธีชำระ (เก็บเงินปลายทาง / โอน / บัตร), ค่าจัดส่งอัตโนมัติ (ฟรีเมื่อยอด ≥ 1,000 บาท), ตัดสต็อก, สร้างเลขคำสั่งซื้อ
+- **คำสั่งซื้อ** — ประวัติคำสั่งซื้อ, ดูรายละเอียด, ติดตามสถานะ
+- **รีวิวสินค้า** — รีวิวเฉพาะลูกค้าที่ซื้อสินค้าจริง (ตรวจสอบจากคำสั่งซื้อ)
+- **ระบบสมาชิก** — สมัคร/เข้าสู่ระบบด้วย JWT (httpOnly cookie) + bcrypt
+- **แผงผู้ดูแลระบบ `(/admin)`** — แดชบอร์ด (ยอดขาย/สถิติ), จัดการสินค้า (เพิ่ม/แก้ไข/ซ่อน/ลบ), จัดการคำสั่งซื้อ (เปลี่ยนสถานะ)
+
+## 🧱 เทคโนโลยี
+
+| ส่วน | เทคโนโลยี |
+|---|---|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Backend | REST API Route Handlers (`src/app/api/**`) |
+| ภาษา | TypeScript |
+| ฐานข้อมูล | PostgreSQL 16 |
+| ORM | Prisma 6 |
+| UI | Tailwind CSS 4 |
+| Auth | JWT (jose) + bcryptjs, httpOnly cookie |
+
+## 🚀 เริ่มต้นใช้งาน
+
+### ข้อกำหนดเบื้องต้น
+- Node.js 20+
+- ฐานข้อมูล PostgreSQL — ใช้ **Neon** (คลาวด์) ได้เลย
+
+### 1. ติดตั้ง dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. ตั้งค่า environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+สร้างไฟล์ `.env.local` (จำเป็น — Next.js โหลด `.env.local` ให้อัตโนมัติส่วน Prisma CLI ใช้ผ่าน `dotenv -e .env.local`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local   # Windows: copy .env.example .env.local
+```
 
-## Learn More
+แก้ไขไฟล์ `.env.local` (ตัวอย่างใช้ฐานข้อมูล **Neon** บนคลาวด์):
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL="postgresql://user:password@host.neon.tech/neondb?sslmode=require"
+AUTH_SECRET="เปลี่ยนเป็น secret ของคุณ"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> ⚠️ `.env.local` มีข้อมูลลับ ถูก ignore ไว้ไม่ให้ commit ขึ้น git (ดู `.gitignore`)
+> ⚠️ ห้ามอ่าน `DATABASE_URL` ใน Client Components — Prisma ใช้ได้เฉพาะใน Server Components / Route Handlers เท่านั้น
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. รัน migration และ seed ข้อมูลตัวอย่าง
 
-## Deploy on Vercel
+```bash
+npm run db:deploy    # prisma migrate deploy (กับฐานข้อมูลที่ตั้งไว้ใน .env.local)
+npm run db:seed      # ใส่ข้อมูลตัวอย่าง (admin + สินค้า 10 รายการ)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> ถ้าใช้ฐานข้อมูล PostgreSQL ที่อื่น ให้เปลี่ยน `DATABASE_URL` ใน `.env.local` ให้ตรงกับฐานข้อมูลของคุณ
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. เริ่มเซิร์ฟเวอร์
+
+```bash
+npm run dev   # → http://localhost:3000
+```
+
+## 🔑 บัญชีทดลอง (จาก seed)
+
+| บทบาท | อีเมล | รหัสผ่าน |
+|---|---|---|
+| ผู้ดูแลระบบ | `admin@shop.com` | `admin123` |
+| ลูกค้า | `customer@shop.com` | `customer123` |
+
+## 📡 REST API
+
+| Method | Path | คำอธิบาย | สิทธิ์ |
+|---|---|---|---|
+| POST | `/api/auth/register` | สมัครสมาชิก | ทุกคน |
+| POST | `/api/auth/login` | เข้าสู่ระบบ (set cookie) | ทุกคน |
+| POST | `/api/auth/logout` | ออกจากระบบ | ทุกคน |
+| GET | `/api/auth/me` | ข้อมูลผู้ใช้ปัจจุบัน | Login |
+| GET | `/api/products` | รายการสินค้า (filter: `category`, `search`, `minPrice`, `maxPrice`, `page`, `pageSize`, `all=1` แสดงสินค้าที่ซ่อน) | ทุกคน |
+| GET | `/api/products/[slug]` | รายละเอียดสินค้า + รีวิว | ทุกคน |
+| POST | `/api/products` | เพิ่มสินค้า | Admin |
+| PUT/DELETE | `/api/products/[slug]` | แก้ไข/ลบสินค้า | Admin |
+| POST | `/api/products/[slug]/reviews` | รีวิวสินค้า (ต้องเคยซื้อ) | Login |
+| GET/POST | `/api/categories` | หมวดหมู่ / เพิ่มหมวดหมู่ | GET: ทุกคน, POST: Admin |
+| PUT/DELETE | `/api/categories/[id]` | แก้ไข/ลบหมวดหมู่ | Admin |
+| GET/POST | `/api/cart` | ดูตะกร้า / เพิ่มสินค้า | Login |
+| PATCH/DELETE | `/api/cart/[productId]` | เปลี่ยนจำนวน / ลบสินค้า | Login |
+| POST | `/api/orders` | สร้างคำสั่งซื้อ (checkout) | Login |
+| GET | `/api/orders` | ประวัติคำสั่งซื้อ (`?scope=all` สำหรับ admin) | Login / Admin |
+| GET | `/api/orders/[id]` | รายละเอียดคำสั่งซื้อ | เจ้าของ / Admin |
+| PATCH | `/api/orders` | อัปเดตสถานะคำสั่งซื้อ (`orderId`, `status`) | Admin |
+| GET | `/api/admin/stats` | สถิติแดชบอร์ด | Admin |
+
+## 📁 โครงสร้างโปรเจกต์
+
+```
+src/
+├── app/
+│   ├── api/                    # REST API (Route Handlers)
+│   │   ├── auth/               # register, login, logout, me
+│   │   ├── products/           # CRUD + reviews + filter/search
+│   │   ├── categories/         # CRUD
+│   │   ├── cart/               # get/add/update/remove
+│   │   ├── orders/             # checkout + history + admin status
+│   │   └── admin/stats/        # dashboard stats
+│   ├── (page)/                 # หน้าเว็บ
+│   ├── cart/page.tsx           # ตะกร้าสินค้า
+│   ├── checkout/page.tsx       # ชำระเงิน
+│   ├── account/                # บัญชี + คำสั่งซื้อ
+│   ├── admin/                  # แผงแอดมิน (dashboard, products, orders)
+│   └── layout.tsx              # Root layout (Header/Footer/CartProvider)
+├── components/                 # UI components (client)
+├── lib/
+│   ├── auth.ts                 # JWT session
+│   ├── prisma.ts               # Prisma client (singleton)
+│   ├── server-fetch.ts         # SSR fetch เรียก REST API ตัวเอง พร้อม cookie
+│   └── validations/            # Zod schemas
+prisma/
+├── schema.prisma               # ฐานข้อมูล (User, Product, Category, Cart, Order, Review...)
+├── seed.ts                     # ข้อมูลตัวอย่าง
+└── migrations/                 # Prisma migrations
+```
+
+## 🧪 คำสั่งที่มีประโยชน์
+
+```bash
+npm run dev          # dev server
+npm run build        # production build
+npm run lint         # ESLint
+npm run db:seed      # seed ข้อมูลตัวอย่าง
+npm run db:deploy    # รัน migration กับฐานข้อมูลจริง
+npm run db:migrate   # สร้าง migration ใหม่ (โหมด dev)
+npm run db:studio    # Prisma Studio (ดูข้อมูลใน DB)
+```
