@@ -155,8 +155,9 @@ export default function CheckoutPage() {
             <h2 className="font-bold">ข้อมูลการจัดส่ง</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium">ชื่อผู้รับ *</label>
+                <label htmlFor="fullName" className="text-sm font-medium">ชื่อผู้รับ *</label>
                 <input
+                  id="fullName"
                   required
                   value={address.fullName}
                   onChange={(e) => updateField("fullName", e.target.value)}
@@ -165,8 +166,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">เบอร์โทรศัพท์ *</label>
+                <label htmlFor="phone" className="text-sm font-medium">เบอร์โทรศัพท์ *</label>
                 <input
+                  id="phone"
                   required
                   type="tel"
                   value={address.phone}
@@ -176,8 +178,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">ที่อยู่ (บ้านเลขที่ / ถนน) *</label>
+                <label htmlFor="line1" className="text-sm font-medium">ที่อยู่ (บ้านเลขที่ / ถนน) *</label>
                 <input
+                  id="line1"
                   required
                   value={address.line1}
                   onChange={(e) => updateField("line1", e.target.value)}
@@ -186,8 +189,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-sm font-medium">ที่อยู่เพิ่มเติม</label>
+                <label htmlFor="line2" className="text-sm font-medium">ที่อยู่เพิ่มเติม</label>
                 <input
+                  id="line2"
                   value={address.line2}
                   onChange={(e) => updateField("line2", e.target.value)}
                   className={inputClass}
@@ -195,8 +199,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">อำเภอ/เขต *</label>
+                <label htmlFor="city" className="text-sm font-medium">อำเภอ/เขต *</label>
                 <input
+                  id="city"
                   required
                   value={address.city}
                   onChange={(e) => updateField("city", e.target.value)}
@@ -205,8 +210,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">จังหวัด *</label>
+                <label htmlFor="state" className="text-sm font-medium">จังหวัด *</label>
                 <input
+                  id="state"
                   required
                   value={address.state}
                   onChange={(e) => updateField("state", e.target.value)}
@@ -215,8 +221,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">รหัสไปรษณีย์ *</label>
+                <label htmlFor="postalCode" className="text-sm font-medium">รหัสไปรษณีย์ *</label>
                 <input
+                  id="postalCode"
                   required
                   value={address.postalCode}
                   onChange={(e) => updateField("postalCode", e.target.value)}
@@ -225,8 +232,9 @@ export default function CheckoutPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">ประเทศ</label>
+                <label htmlFor="country" className="text-sm font-medium">ประเทศ</label>
                 <input
+                  id="country"
                   value={address.country}
                   onChange={(e) => updateField("country", e.target.value)}
                   className={inputClass}

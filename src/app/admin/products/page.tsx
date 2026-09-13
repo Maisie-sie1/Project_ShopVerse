@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { formatBaht } from "@/lib/utils";
 import type { Product } from "@/lib/types";
@@ -10,6 +11,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
@@ -29,9 +31,10 @@ export default function AdminProductsPage() {
   }, [search]);
 
   useEffect(() => {
+    // re-fetch เมื่อกลับมาที่หน้านี้ (เช่น หลังเพิ่ม/แก้ไขสินค้าในหน้า form แล้ว redirect กลับมา)
     const timer = setTimeout(load, 300);
     return () => clearTimeout(timer);
-  }, [load]);
+  }, [load, pathname]);
 
   async function toggleActive(product: Product) {
     await fetch(`/api/products/${product.slug}`, {

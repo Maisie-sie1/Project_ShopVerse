@@ -132,8 +132,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5 rounded-2xl border border-stone-200 bg-white p-6">
         <div>
-          <label className="text-sm font-medium">ชื่อสินค้า *</label>
+          <label htmlFor="name" className="text-sm font-medium">ชื่อสินค้า *</label>
           <input
+            id="name"
             required
             minLength={2}
             value={form.name}
@@ -144,8 +145,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label className="text-sm font-medium">Slug (URL)</label>
+            <label htmlFor="slug" className="text-sm font-medium">Slug (URL)</label>
             <input
+              id="slug"
               value={form.slug}
               onChange={(e) => update("slug", e.target.value)}
               className={inputClass}
@@ -153,8 +155,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
             />
           </div>
           <div>
-            <label className="text-sm font-medium">หมวดหมู่ *</label>
+            <label htmlFor="categoryId" className="text-sm font-medium">หมวดหมู่ *</label>
             <select
+              id="categoryId"
               required
               value={form.categoryId}
               onChange={(e) => update("categoryId", e.target.value)}
@@ -168,8 +171,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium">ราคา (บาท) *</label>
+            <label htmlFor="price" className="text-sm font-medium">ราคา (บาท) *</label>
             <input
+              id="price"
               required
               type="number"
               min={0}
@@ -181,8 +185,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
             />
           </div>
           <div>
-            <label className="text-sm font-medium">ราคาป้ายแดง (บาท)</label>
+            <label htmlFor="compareAtPrice" className="text-sm font-medium">ราคาป้ายแดง (บาท)</label>
             <input
+              id="compareAtPrice"
               type="number"
               min={0}
               step="0.01"
@@ -193,8 +198,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
             />
           </div>
           <div>
-            <label className="text-sm font-medium">สต็อก (ชิ้น) *</label>
+            <label htmlFor="stock" className="text-sm font-medium">สต็อก (ชิ้น) *</label>
             <input
+              id="stock"
               required
               type="number"
               min={0}
@@ -205,10 +211,11 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
           </div>
         </div>
         <div>
-          <label className="text-sm font-medium">URL รูปภาพ *</label>
+          <label htmlFor="imageUrl" className="text-sm font-medium">URL รูปภาพ *</label>
           <input
+            id="imageUrl"
             required
-            type="url"
+            type="text"
             value={form.imageUrl}
             onChange={(e) => update("imageUrl", e.target.value)}
             className={inputClass}
@@ -216,8 +223,9 @@ export function ProductForm({ mode, slug }: { mode: "create" | "edit"; slug?: st
           />
         </div>
         <div>
-          <label className="text-sm font-medium">คำอธิบาย *</label>
+          <label htmlFor="description" className="text-sm font-medium">คำอธิบาย *</label>
           <textarea
+            id="description"
             required
             minLength={10}
             value={form.description}

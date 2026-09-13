@@ -127,16 +127,58 @@ prisma/
 ├── schema.prisma               # ฐานข้อมูล (User, Product, Category, Cart, Order, Review...)
 ├── seed.ts                     # ข้อมูลตัวอย่าง
 └── migrations/                 # Prisma migrations
+e2e/                            # Playwright E2E tests
+├── helpers/auth.ts             # login/register helper + seed accounts
+├── store.spec.ts               # หน้าแรก / shop / product
+├── auth.spec.ts                # สมัคร/เข้าสู่ระบบ/ออกจากระบบ
+├── cart.spec.ts                # ตะกร้า: เพิ่ม/แก้จำนวน/ลบ
+├── checkout.spec.ts            # ชำระเงิน + validation
+└── admin.spec.ts               # แผงแอดมิน + สิทธิ์
 ```
+
+## 🤖 Automated Testing ด้วย Playwright
+
+เทสต์ E2E จำลองผู้ใช้จริงคลิกใช้งานเว็บ (UI-level) ครอบคลุมหน้าแรก, ค้นหา/กรองสินค้า, สมัคร/เข้าสู่ระบบ, ตะกร้า, สั่งซื้อ และแผงแอดมิน
+
+### ติดตั้ง browser (ครั้งแรก)
+
+```bash
+npm run test:e2e:install
+```
+
+### รันเทสต์ทั้งหมด
+
+```bash
+npm run test:e2e
+```
+
+> `webServer` ใน `playwright.config.ts` จะเปิด `npm run dev` ให้อัตโนมัติ (พอร์ต 3000) — ไม่ต้องรันเอง
+
+### คำสั่งอื่นๆ
+
+```bash
+npm run test:e2e:ui       # เปิด UI mode (ดู step-by-step)
+npm run test:e2e:headed   # รันแบบเห็น browser
+npx playwright test e2e/store.spec.ts   # รันเฉพาะไฟล์
+```
+
+### หลักการที่ใช้
+
+- **ไม่เช็ตอัพผ่าน API** — login/register ผ่าน UI จริง เพื่อทดสอบ user journey
+- **แต่ละเทสต์ใช้ user ใหม่** (สมัครสด) ในตะกร้า/checkout เพื่อไม่ให้ชนกันตอน parallel
+- **รอ element ผ่าน auto-wait** (`expect(...).toBeVisible()`) แทน sleep
+- รายงาน HTML เก็บที่ `playwright-report/` — เปิดได้ด้วย `npx playwright show-report`
 
 ## 🧪 คำสั่งที่มีประโยชน์
 
 ```bash
-npm run dev          # dev server
-npm run build        # production build
-npm run lint         # ESLint
-npm run db:seed      # seed ข้อมูลตัวอย่าง
-npm run db:deploy    # รัน migration กับฐานข้อมูลจริง
-npm run db:migrate   # สร้าง migration ใหม่ (โหมด dev)
-npm run db:studio    # Prisma Studio (ดูข้อมูลใน DB)
+npm run dev              # dev server
+npm run build            # production build
+npm run lint             # ESLint
+npm run db:seed          # seed ข้อมูลตัวอย่าง
+npm run db:deploy        # รัน migration กับฐานข้อมูลจริง
+npm run db:migrate       # สร้าง migration ใหม่ (โหมด dev)
+npm run db:studio        # Prisma Studio (ดูข้อมูลใน DB)
+npm run test:e2e        # รัน Playwright tests
+npm run test:e2e:ui      # Playwright UI mode
 ```
