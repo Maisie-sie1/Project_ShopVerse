@@ -1,14 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright E2E config — ShopVerse
+ * Playwright E2E + API config — ShopVerse
+ *
+ * - project "chromium": E2E UI tests (browser)
+ * - project "api": REST API tests ใช้ request context (เร็ว ไม่ต้อง browser)
  *
  * webServer: เปิด Next.js ให้อัตโนมัติ (reuse ถ้ามี server อยู่แล้ว)
- * แต่ละเทสต์ใช้ user ใหม่ (register ผ่าน UI) เพื่อไม่ให้ data ชนกัน
  */
 export default defineConfig({
   testDir: "./tests",
-  fullyParallel: false, // รัน test ในไฟล์เดียวกันเป็น parallel แต่ไฟล์ต่อไฟล์ (ลด load DB)
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : 2,
@@ -23,8 +25,20 @@ export default defineConfig({
   },
 
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } }, // ตรวจ cross-browser (cookie/Safari)
+    {
+      name: "chromium",
+      testIgnore: /tests\/api\//,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "webkit",
+      testIgnore: /tests\/api\//,
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "api",
+      testMatch: /tests\/api\/.*\.spec\.ts/,
+    },
   ],
 
   webServer: {

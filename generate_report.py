@@ -53,16 +53,18 @@ ws["A2"].font = Font(name="Segoe UI", size=11, italic=True, color="4B5563")
 
 summary_data = [
     ("Metric", "Value"),
-    ("Total Test Cases", 21),
-    ("PASS (Chromium)", 21),
-    ("FAIL (Chromium)", 0),
-    ("PASS (WebKit)", 5),
-    ("FAIL (WebKit)", 16),
-    ("BLOCKED", 0),
+    ("Total Test Cases (UI E2E)", 21),
+    ("PASS (Chromium UI)", 21),
+    ("FAIL (Chromium UI)", 0),
+    ("PASS (WebKit UI)", 5),
+    ("FAIL (WebKit UI)", 16),
+    ("Total API Test Cases", 40),
+    ("PASS (API)", 40),
+    ("FAIL (API)", 0),
     ("Bugs Found", 1),
     ("Critical Bugs", 1),
-    ("Coverage (Modules)", "Storefront, Auth, Cart, Checkout, Admin, RBAC"),
-    ("Environments", "Chromium (Desktop Chrome), WebKit (Desktop Safari)"),
+    ("Coverage (Modules)", "Storefront, Auth, Cart, Checkout, Admin, RBAC, REST API"),
+    ("Environments", "Chromium (UI), WebKit (UI), API request context"),
     ("App URL", "http://localhost:3000"),
 ]
 for i, (k, v) in enumerate(summary_data, start=4):
@@ -148,6 +150,7 @@ verifications = [
     ("npm run build", "Build", "PASS", "next build ผ่าน (prisma generate && next build)"),
     ("npm run test:e2e (chromium)", "E2E", "PASS", "21/21 ผ่าน"),
     ("npm run test:e2e (webkit)", "E2E", "FAIL", "16 fail — ทั้งหมดจาก BUG-001"),
+    ("npx playwright test --project=api", "API Tests", "PASS", "40/40 ผ่าน (request context)"),
     ("npm run db:seed", "Seed", "PASS", "seed สำเร็จก่อนรันเทสต์"),
 ]
 for i, row in enumerate(verifications, start=2):
@@ -180,6 +183,61 @@ for i, row in enumerate(coverage, start=2):
 style_body(ws5, 2, len(coverage) + 1, len(headers5))
 for i, w in enumerate([34, 12, 26, 16], start=1):
     ws5.column_dimensions[get_column_letter(i)].width = w
+
+# ---------- Sheet 6: API Tests ----------
+ws6 = wb.create_sheet("API Tests")
+headers6 = ["ID", "API", "Scenario", "Role", "Priority", "Expected", "Status"]
+ws6.append(headers6)
+style_header(ws6, 1, len(headers6))
+api_tests = [
+    ("API-AUTH-001", "POST /auth/register", "ลงทะเบียนสำเร็จ", "Guest", "Critical", "201 + user + ไม่ leak hash", "PASS"),
+    ("API-AUTH-002", "POST /auth/register", "email ซ้ำ", "Guest", "High", "409", "PASS"),
+    ("API-AUTH-003", "POST /auth/register", "ข้อมูลไม่ valid", "Guest", "High", "422", "PASS"),
+    ("API-AUTH-004", "POST /auth/login", "login สำเร็จ", "Guest", "Critical", "200 + user", "PASS"),
+    ("API-AUTH-005", "POST /auth/login", "รหัสผิด", "Guest", "Critical", "401", "PASS"),
+    ("API-AUTH-006", "GET /auth/me", "ไม่มี session", "Guest", "High", "user null", "PASS"),
+    ("API-AUTH-007", "GET /auth/me", "มี session", "Customer", "High", "คืน user", "PASS"),
+    ("API-AUTH-008", "POST /auth/logout", "logout แล้ว me null", "Customer", "High", "null", "PASS"),
+    ("API-AUTH-009", "register→me (context)", "session cookie ทำงาน", "Customer", "High", "me ไม่ null", "PASS"),
+    ("API-PRD-001", "GET /products", "รายการ + pagination", "Guest", "Critical", "200", "PASS"),
+    ("API-PRD-002", "GET /products?category", "กรองหมวด", "Guest", "High", "เฉพาะหมวด", "PASS"),
+    ("API-PRD-003", "GET /products?search", "ค้นหาภาษาไทย", "Guest", "High", "ผลมีคำค้น", "PASS"),
+    ("API-PRD-004", "GET /products?min/max", "กรองราคา", "Guest", "High", "ช่วงราคาถูก", "PASS"),
+    ("API-PRD-005", "GET /products/[slug]", "รายละเอียด + reviews", "Guest", "Critical", "200", "PASS"),
+    ("API-PRD-006", "GET /products/[slug]", "ไม่มีสินค้า", "Guest", "Medium", "404", "PASS"),
+    ("API-PRD-007", "POST /products", "ไม่มี session", "Guest", "Critical", "401", "PASS"),
+    ("API-PRD-008", "POST /products", "admin สำเร็จ", "Admin", "Critical", "201", "PASS"),
+    ("API-PRD-009", "POST /products", "ข้อมูลไม่ valid", "Admin", "High", "422", "PASS"),
+    ("API-PRD-010", "POST /products", "customer", "Customer", "Critical", "403", "PASS"),
+    ("API-CAT-001", "GET /categories", "รายการ", "Guest", "Medium", "200", "PASS"),
+    ("API-CAT-002", "POST /categories", "ไม่มี session", "Guest", "High", "401", "PASS"),
+    ("API-CAT-002b", "POST /categories", "customer", "Customer", "High", "403", "PASS"),
+    ("API-CAT-003", "POST /categories", "admin สำเร็จ + ซ้ำ", "Admin", "High", "201/409", "PASS"),
+    ("API-CART-001", "GET /cart", "ไม่ login", "Guest", "Critical", "401", "PASS"),
+    ("API-CART-002", "POST /cart", "เพิ่มสินค้า", "Customer", "Critical", "200 + itemCount", "PASS"),
+    ("API-CART-003", "POST /cart", "เกินสต็อก", "Customer", "High", "422", "PASS"),
+    ("API-CART-004", "PATCH /cart/[id]", "เปลี่ยนจำนวน", "Customer", "High", "200", "PASS"),
+    ("API-CART-005", "DELETE /cart/[id]", "ลบ item", "Customer", "High", "200 + ว่าง", "PASS"),
+    ("API-ORD-001", "POST /orders", "ไม่ login", "Guest", "Critical", "401", "PASS"),
+    ("API-ORD-002", "POST /orders", "checkout สำเร็จ + ลด stock", "Customer", "Critical", "201 + ORD-", "PASS"),
+    ("API-ORD-003", "POST /orders", "ไม่มี session", "Guest", "High", "401", "PASS"),
+    ("API-ORD-003b", "POST /orders", "body ไม่ valid", "Customer", "High", "422", "PASS"),
+    ("API-ORD-004", "GET /orders", "เห็นเฉพาะของตัวเอง", "Customer", "Critical", "เฉพาะ user", "PASS"),
+    ("API-ADM-001", "PATCH /orders", "ไม่มี session", "Guest", "Critical", "401", "PASS"),
+    ("API-ADM-001b", "PATCH /orders", "customer", "Customer", "Critical", "403", "PASS"),
+    ("API-ADM-002", "PATCH /orders", "status ไม่ valid", "Admin", "High", "422", "PASS"),
+    ("API-ADM-003", "GET /orders?scope=all", "admin เห็นทั้งหมด", "Admin", "High", "200", "PASS"),
+    ("API-ADM-004", "GET /admin/stats", "ไม่มี session", "Guest", "Critical", "401", "PASS"),
+    ("API-ADM-005", "GET /admin/stats", "customer", "Customer", "Critical", "403", "PASS"),
+    ("API-ADM-006", "GET /admin/stats", "admin", "Admin", "High", "200 + stats", "PASS"),
+]
+for row in api_tests:
+    ws6.append(row)
+style_body(ws6, 2, len(api_tests) + 1, len(headers6))
+for r, row in enumerate(api_tests, start=2):
+    status_fill(ws6, r, 7, row[6])
+for i, w in enumerate([16, 22, 26, 10, 10, 22, 10], start=1):
+    ws6.column_dimensions[get_column_letter(i)].width = w
 
 wb.save("test-automation.xlsx")
 print("✅ Created test-automation.xlsx")

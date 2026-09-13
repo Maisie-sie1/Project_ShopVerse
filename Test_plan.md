@@ -126,3 +126,56 @@
 | BUG-001 | Auth/Session | **Critical** | Open | Session cookie ไม่ถูกตั้งบน WebKit/Safari — login/register/cart/checkout/admin ทั้งหมดล้มเหลวบน Safari |
 
 *รายละเอียดเต็มใน `Bug_report.md`*
+
+---
+
+## 10. API Test Automation (เพิ่มเติม)
+
+ทดสอบ REST API โดยตรงผ่าน Playwright `request` context (ไม่ผ่าน UI) — ใช้ business rule จาก code จริง
+
+### API Test Cases
+
+| ID | API | Scenario | Role | Priority | Expected | Status |
+|---|---|---|---|---|---|---|
+| API-AUTH-001 | POST /auth/register | ลงทะเบียนสำเร็จ | Guest | Critical | 201 + user + ไม่ leak hash | PASS |
+| API-AUTH-002 | POST /auth/register | email ซ้ำ | Guest | High | 409 | PASS |
+| API-AUTH-003 | POST /auth/register | ข้อมูลไม่ valid | Guest | High | 422 | PASS |
+| API-AUTH-004 | POST /auth/login | login สำเร็จ | Guest | Critical | 200 + user | PASS |
+| API-AUTH-005 | POST /auth/login | รหัสผิด | Guest | Critical | 401 | PASS |
+| API-AUTH-006 | GET /auth/me | ไม่มี session | Guest | High | user null | PASS |
+| API-AUTH-007 | GET /auth/me | มี session | Customer | High | คืน user | PASS |
+| API-AUTH-008 | POST /auth/logout | logout แล้ว me null | Customer | High | null | PASS |
+| API-AUTH-009 | Session cookie ผ่าน context | register→me | Customer | High | me ไม่ null | PASS |
+| API-PRD-001 | GET /products | รายการ + pagination | Guest | Critical | 200 | PASS |
+| API-PRD-002 | GET /products?category | กรองหมวด | Guest | High | เฉพาะหมวดนั้น | PASS |
+| API-PRD-003 | GET /products?search | ค้นหาภาษาไทย | Guest | High | ผลมีคำค้น | PASS |
+| API-PRD-004 | GET /products?min/max | กรองราคา | Guest | High | ช่วงราคาถูก | PASS |
+| API-PRD-005 | GET /products/[slug] | รายละเอียด + reviews | Guest | Critical | 200 | PASS |
+| API-PRD-006 | GET /products/[slug] | ไม่มีสินค้า | Guest | Medium | 404 | PASS |
+| API-PRD-007 | POST /products | ไม่มี session | Guest | Critical | 401 | PASS |
+| API-PRD-008 | POST /products | admin สำเร็จ | Admin | Critical | 201 | PASS |
+| API-PRD-009 | POST /products | ข้อมูลไม่ valid | Admin | High | 422 | PASS |
+| API-PRD-010 | POST /products | customer | Customer | Critical | 403 | PASS |
+| API-CAT-001 | GET /categories | รายการ | Guest | Medium | 200 | PASS |
+| API-CAT-002 | POST /categories | ไม่มี session | Guest | High | 401 | PASS |
+| API-CAT-002b | POST /categories | customer | Customer | High | 403 | PASS |
+| API-CAT-003 | POST /categories | admin สำเร็จ + ซ้ำ 409 | Admin | High | 201/409 | PASS |
+| API-CART-001 | GET /cart | ไม่ login | Guest | Critical | 401 | PASS |
+| API-CART-002 | POST /cart | เพิ่มสินค้า | Customer | Critical | 200 + itemCount | PASS |
+| API-CART-003 | POST /cart | เกินสต็อก | Customer | High | 422 | PASS |
+| API-CART-004 | PATCH /cart/[id] | เปลี่ยนจำนวน | Customer | High | 200 | PASS |
+| API-CART-005 | DELETE /cart/[id] | ลบ item | Customer | High | 200 + ว่าง | PASS |
+| API-ORD-001 | POST /orders | ไม่ login | Guest | Critical | 401 | PASS |
+| API-ORD-002 | POST /orders | checkout สำเร็จ + ลด stock | Customer | Critical | 201 + ORD- | PASS |
+| API-ORD-003 | POST /orders | ไม่มี session | Guest | High | 401 | PASS |
+| API-ORD-003b | POST /orders | body ไม่ valid | Customer | High | 422 | PASS |
+| API-ORD-004 | GET /orders | เห็นเฉพาะของตัวเอง | Customer | Critical | เฉพาะ user | PASS |
+| API-ADM-001 | PATCH /orders | ไม่มี session | Guest | Critical | 401 | PASS |
+| API-ADM-001b | PATCH /orders | customer | Customer | Critical | 403 | PASS |
+| API-ADM-002 | PATCH /orders | status ไม่ valid | Admin | High | 422 | PASS |
+| API-ADM-003 | GET /orders?scope=all | admin เห็นทั้งหมด | Admin | High | 200 | PASS |
+| API-ADM-004 | GET /admin/stats | ไม่ login | Guest | Critical | 401 | PASS |
+| API-ADM-005 | GET /admin/stats | customer | Customer | Critical | 403 | PASS |
+| API-ADM-006 | GET /admin/stats | admin | Admin | High | 200 + stats | PASS |
+
+**รวม API tests: 40/40 PASS (Chromium project ใช้ API context ไม่พึ่ง browser cookie → ไม่มีผลจาก BUG-001)**
