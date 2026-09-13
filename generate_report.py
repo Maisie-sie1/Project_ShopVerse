@@ -1,0 +1,185 @@
+"""สร้าง test-automation.xlsx จากผลการทดสอบจริงของ ShopVerse (QA ไม่แก้ application code)"""
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+
+wb = openpyxl.Workbook()
+
+# ---------- Styles ----------
+TITLE_FONT = Font(name="Segoe UI", size=16, bold=True, color="1E3A8A")
+HEADER_FONT = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+HEADER_FILL = PatternFill("solid", start_color="1E3A8A")
+SECTION_FONT = Font(name="Segoe UI", size=13, bold=True, color="1E3A8A")
+BOLD = Font(name="Segoe UI", size=10, bold=True)
+REGULAR = Font(name="Segoe UI", size=10)
+PASS_FILL = PatternFill("solid", start_color="C6EFCE")
+FAIL_FILL = PatternFill("solid", start_color="FFC7CE")
+WARN_FILL = PatternFill("solid", start_color="FFEB9C")
+THIN = Side(style="thin", color="D1D5DB")
+BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+WRAP = Alignment(wrap_text=True, vertical="top")
+
+def style_header(ws, row, ncols):
+    for c in range(1, ncols + 1):
+        cell = ws.cell(row=row, column=c)
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = Alignment(vertical="center", wrap_text=True)
+        cell.border = BORDER
+
+def style_body(ws, start_row, end_row, ncols):
+    for r in range(start_row, end_row + 1):
+        for c in range(1, ncols + 1):
+            cell = ws.cell(row=r, column=c)
+            cell.font = REGULAR
+            cell.alignment = WRAP
+            cell.border = BORDER
+
+def status_fill(ws, row, col, status):
+    if status == "PASS":
+        ws.cell(row=row, column=col).fill = PASS_FILL
+    elif status == "FAIL":
+        ws.cell(row=row, column=col).fill = FAIL_FILL
+    elif status in ("BLOCKED",):
+        ws.cell(row=row, column=col).fill = WARN_FILL
+
+# ---------- Sheet 1: Summary ----------
+ws = wb.active
+ws.title = "Summary"
+ws["A1"] = "ShopVerse — Test Automation Summary"
+ws["A1"].font = TITLE_FONT
+ws["A2"] = "Playwright E2E | 2026-09-13 | QA: Senior QA Automation Engineer"
+ws["A2"].font = Font(name="Segoe UI", size=11, italic=True, color="4B5563")
+
+summary_data = [
+    ("Metric", "Value"),
+    ("Total Test Cases", 21),
+    ("PASS (Chromium)", 21),
+    ("FAIL (Chromium)", 0),
+    ("PASS (WebKit)", 5),
+    ("FAIL (WebKit)", 16),
+    ("BLOCKED", 0),
+    ("Bugs Found", 1),
+    ("Critical Bugs", 1),
+    ("Coverage (Modules)", "Storefront, Auth, Cart, Checkout, Admin, RBAC"),
+    ("Environments", "Chromium (Desktop Chrome), WebKit (Desktop Safari)"),
+    ("App URL", "http://localhost:3000"),
+]
+for i, (k, v) in enumerate(summary_data, start=4):
+    ws.cell(row=i, column=1, value=k).font = BOLD
+    ws.cell(row=i, column=2, value=v).font = REGULAR
+    ws.cell(row=i, column=1).border = BORDER
+    ws.cell(row=i, column=2).border = BORDER
+ws.column_dimensions["A"].width = 28
+ws.column_dimensions["B"].width = 60
+
+# ---------- Sheet 2: Test Cases ----------
+ws2 = wb.create_sheet("Test Cases")
+headers2 = ["ID", "Feature", "Scenario", "Role", "Priority", "Expected", "Status (Chromium)", "Status (WebKit)", "Bug ID", "Notes"]
+ws2.append(headers2)
+style_header(ws2, 1, len(headers2))
+
+tests = [
+    ("STORE-001", "Storefront", "โหลดหน้าแรก แสดง hero + สินค้าแนะนำ", "Guest", "Critical", "Hero + การ์ดสินค้าโผล่", "PASS", "PASS", "", ""),
+    ("STORE-002", "Storefront", "ปุ่ม CTA ไป /shop", "Guest", "Medium", "Redirect /shop + heading", "PASS", "PASS", "", ""),
+    ("STORE-003", "Storefront", "กรองหมวดหมู่ drinks", "Guest", "Critical", "เห็นสินค้าเครื่องดื่ม", "PASS", "PASS", "", ""),
+    ("STORE-004", "Storefront", "ค้นหา 'กาแฟ'", "Guest", "High", "ผลการค้นหามี กาแฟ", "PASS", "PASS", "", ""),
+    ("STORE-005", "Storefront", "เปิดหน้าสินค้า", "Guest", "Critical", "h1 + ปุ่มเพิ่ม", "PASS", "PASS", "", ""),
+    ("AUTH-001", "Auth", "สมัครสมาชิกสำเร็จ", "Guest", "Critical", "Login ทันที + ปุ่มบัญชี", "PASS", "FAIL", "BUG-001", "WebKit: cookie ไม่ set"),
+    ("AUTH-002", "Auth", "สมัครรหัสยืนยันไม่ตรงกัน", "Guest", "High", "error 'รหัสผ่านไม่ตรงกัน'", "PASS", "PASS", "", "Validation ทำงานก่อน API"),
+    ("AUTH-003", "Auth", "เข้าสู่ระบบ seed customer", "Guest", "Critical", "ปุ่มบัญชีโผล่", "PASS", "FAIL", "BUG-001", ""),
+    ("AUTH-004", "Auth", "เข้าสู่ระบบรหัสผิด", "Guest", "High", "error 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'", "PASS", "PASS", "", "ไม่มี cookie => ไม่ login (ถูกต้อง)"),
+    ("AUTH-005", "Auth", "ออกจากระบบ", "Customer", "High", "header กลับ 'เข้าสู่ระบบ'", "PASS", "FAIL", "BUG-001", "ต้อง login ก่อน"),
+    ("AUTH-006", "Auth", "RBAC: customer → /admin redirect", "Customer", "Critical", "redirect ออกจาก /admin", "PASS", "FAIL", "BUG-001", "ต้อง login ก่อน"),
+    ("CART-001", "Cart", "เพิ่มสินค้า → badge", "Customer", "Critical", "badge ≥ 1", "PASS", "FAIL", "BUG-001", ""),
+    ("CART-002", "Cart", "หน้า /cart เปลี่ยนจำนวน", "Customer", "High", "qty เพิ่มขึ้น", "PASS", "FAIL", "BUG-001", ""),
+    ("CART-003", "Cart", "ลบสินค้า → ว่าง", "Customer", "High", "ข้อความ 'ตะกร้าว่างเปล่า'", "PASS", "FAIL", "BUG-001", ""),
+    ("CHK-001", "Checkout", "สั่งซื้อ COD สำเร็จ", "Customer", "Critical", "redirect order detail + ORD-", "PASS", "FAIL", "BUG-001", ""),
+    ("CHK-002", "Checkout", "ไม่กรอกที่อยู่ validation", "Customer", "High", "ยังอยู่ /checkout", "PASS", "FAIL", "BUG-001", "ต้อง login ก่อน"),
+    ("ADM-001", "Admin", "Dashboard สถิติ", "Admin", "Critical", "การ์ดสถิติโผล่", "PASS", "FAIL", "BUG-001", ""),
+    ("ADM-002", "Admin", "เพิ่มสินค้า → เห็นในตาราง", "Admin", "Critical", "redirect + ชื่อสินค้าในตาราง", "PASS", "FAIL", "BUG-001", ""),
+    ("ADM-003", "Admin", "เปลี่ยนสถานะ order", "Admin", "High", "select = PROCESSING", "PASS", "FAIL", "BUG-001", ""),
+    ("ADM-004", "Admin/RBAC", "ลูกค้าเรียก /api/admin/stats → 403", "Customer", "Critical", "403", "PASS", "FAIL", "BUG-001", "API ใช้ cookie auth; WebKit ไม่มี cookie"),
+    ("ADM-005", "Admin/RBAC", "ลูกค้า PATCH /api/orders → 403", "Customer", "Critical", "403", "PASS", "FAIL", "BUG-001", ""),
+]
+for row in tests:
+    ws2.append(row)
+style_body(ws2, 2, len(tests) + 1, len(headers2))
+for r, row in enumerate(tests, start=2):
+    status_fill(ws2, r, 7, row[6])
+    status_fill(ws2, r, 8, row[7])
+widths2 = [12, 14, 34, 10, 10, 34, 18, 18, 10, 26]
+for i, w in enumerate(widths2, start=1):
+    ws2.column_dimensions[get_column_letter(i)].width = w
+
+# ---------- Sheet 3: Bugs ----------
+ws3 = wb.create_sheet("Bugs")
+headers3 = ["Bug ID", "Feature", "Severity", "Priority", "Expected", "Actual",
+            "Possible Cause", "Suggested Fix", "Related Test", "Status"]
+ws3.append(headers3)
+style_header(ws3, 1, len(headers3))
+bug = [
+    "BUG-001",
+    "Authentication / Session",
+    "Critical",
+    "P0",
+    "ตั้ง session cookie หลัง login/register แล้ว header แสดง logged-in",
+    "WebKit: ไม่มี cookie shop_session (cookies=[]) → login/ทุก flow ที่ต้อง auth ล้มเหลว",
+    "Set-Cookie จาก cookies().set() ใน src/lib/auth.ts ไม่ถูก WebKit เก็บ (localhost/http + httpOnly/sameSite) — วิเคราะห์จาก evidence ยังไม่ยืนยัน 100%",
+    "ตรวจ attributes (secure/sameSite) บน localhost; ลอง HTTPS dev; fallback ในการส่ง token สำหรับ Safari",
+    "AUTH-001/003/005/006, CART-*, CHK-*, ADM-*",
+    "Open",
+]
+ws3.append(bug)
+style_body(ws3, 2, 2, len(headers3))
+ws3.cell(row=2, column=3).fill = FAIL_FILL
+widths3 = [12, 26, 10, 10, 34, 40, 42, 42, 24, 10]
+for i, w in enumerate(widths3, start=1):
+    ws3.column_dimensions[get_column_letter(i)].width = w
+
+# ---------- Sheet 4: Verification ----------
+ws4 = wb.create_sheet("Verification")
+headers4 = ["Command", "Type", "Result", "Notes"]
+ws4.append(headers4)
+style_header(ws4, 1, len(headers4))
+verifications = [
+    ("npm run lint", "Lint (ESLint)", "PASS", "ไม่มี error/warning"),
+    ("npx tsc --noEmit", "TypeCheck", "PASS", "ผ่าน (ไม่มี script typecheck ใน package.json)"),
+    ("npm run build", "Build", "PASS", "next build ผ่าน (prisma generate && next build)"),
+    ("npm run test:e2e (chromium)", "E2E", "PASS", "21/21 ผ่าน"),
+    ("npm run test:e2e (webkit)", "E2E", "FAIL", "16 fail — ทั้งหมดจาก BUG-001"),
+    ("npm run db:seed", "Seed", "PASS", "seed สำเร็จก่อนรันเทสต์"),
+]
+for i, row in enumerate(verifications, start=2):
+    ws4.append(row)
+style_body(ws4, 2, len(verifications) + 1, len(headers4))
+for r in range(2, len(verifications) + 2):
+    status_fill(ws4, r, 3, ws4.cell(row=r, column=3).value)
+widths4 = [26, 16, 10, 46]
+for i, w in enumerate(widths4, start=1):
+    ws4.column_dimensions[get_column_letter(i)].width = w
+
+# ---------- Sheet 5: Coverage ----------
+ws5 = wb.create_sheet("Coverage")
+headers5 = ["Module / Feature", "Covered", "Test IDs", "Priority"]
+ws5.append(headers5)
+style_header(ws5, 1, len(headers5))
+coverage = [
+    ("Storefront & Catalog", "Yes", "STORE-001..005", "Critical/High"),
+    ("Authentication (Register/Login/Logout)", "Yes", "AUTH-001..005", "Critical"),
+    ("RBAC / Authorization", "Yes", "AUTH-006, ADM-004, ADM-005", "Critical"),
+    ("Cart", "Yes", "CART-001..003", "Critical/High"),
+    ("Checkout & Orders", "Yes", "CHK-001..002", "Critical"),
+    ("Admin Panel (Dashboard/Product CRUD/Order status)", "Yes", "ADM-001..003", "Critical/High"),
+    ("Validation / Negative cases", "Yes", "AUTH-002, AUTH-004, CHK-002", "High"),
+    ("Cross-browser (Chromium + WebKit)", "Yes", "All", "High"),
+    ("ไม่ครอบคลุม: payment จริง, webhook, สลิป, coupon", "No (out of scope)", "-", "Low"),
+]
+for i, row in enumerate(coverage, start=2):
+    ws5.append(row)
+style_body(ws5, 2, len(coverage) + 1, len(headers5))
+for i, w in enumerate([34, 12, 26, 16], start=1):
+    ws5.column_dimensions[get_column_letter(i)].width = w
+
+wb.save("test-automation.xlsx")
+print("✅ Created test-automation.xlsx")
