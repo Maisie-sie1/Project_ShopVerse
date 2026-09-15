@@ -15,6 +15,9 @@
 /blob-report/
 /.playwright/
 
+# robot framework
+/robot_results/
+
 # next.js
 /.next/
 /out/

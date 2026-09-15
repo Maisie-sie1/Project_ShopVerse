@@ -18,7 +18,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "test:robot": "robot --outputdir robot_results robot_tests",
+    "test:robot:ui": "robot --outputdir robot_results --log log.html --report report.html robot_tests"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
